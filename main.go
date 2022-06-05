@@ -3,6 +3,7 @@ package main
 import (
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -26,7 +27,8 @@ func logRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 3.Server 端记录访问日志包括客户端 IP，HTTP 返回码，输出到 server 端的标准输出
-	log.Println("Remote Address:", r.RemoteAddr)
+	remoteIP := getRealIP(r)
+	log.Println("Remote Address:", remoteIP)
 
 	// 4. 当访问 localhost/healthz 时，应返回 200
 	if r.RequestURI == "/healthz" {
@@ -43,6 +45,23 @@ func logRequest(w http.ResponseWriter, r *http.Request) {
 	for key := range resHeader {
 		log.Println(key, resHeader.Get(key))
 	}
+}
+
+func getRealIP(r *http.Request) string {
+	xForwardedFor := r.Header.Get("X-Forwarded-For")
+	if ip := strings.TrimSpace(strings.Split(xForwardedFor, ",")[0]); ip != "" {
+		return ip
+	}
+
+	if ip := strings.TrimSpace(r.Header.Get("X-Real-Ip")); ip != "" {
+		return ip
+	}
+
+	if ip, _, err := net.SplitHostPort(strings.TrimSpace(r.RemoteAddr)); err == nil {
+		return ip
+	}
+
+	return ""
 }
 
 func main() {
