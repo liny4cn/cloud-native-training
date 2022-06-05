@@ -19,7 +19,9 @@ func logRequest(w http.ResponseWriter, r *http.Request) {
 
 	// 2. 读取当前系统的环境变量中的 VERSION 配置，并写入 response header
 	version := os.Getenv("VERSION")
-	if version != "" {
+	if version == "" {
+		w.Header().Add("VERSION", "1.0")
+	} else {
 		w.Header().Add("VERSION", version)
 	}
 
