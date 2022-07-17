@@ -1,0 +1,152 @@
+# Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cncamp-8
+
+---
+# Secret
+# 由于我是直接使用 public 镜像库，实际不需要 dockerconfig。
+# 但一般的项目还是会放到私有镜像库中，因此还是配置了一个 dockerconfig。
+# 同时，dockerconfig 理论上需要配置成共用的，不应该在部署文件中带进来，以方便定期更新，并进行权限控制。 
+apiVersion: v1
+kind: Secret
+metadata:
+  name: go-http-server-secret
+  namespace: cncamp-8
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: >-
+    eyJhdXRocyI6e319Cg==
+
+---
+# Config Map
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: go-http-server-conf
+  namespace: cncamp-8
+data:
+  httpport: "80"
+  loglevel: "info"
+
+---
+# Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-http-server
+  namespace: cncamp-8
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: go-http-server
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: go-http-server
+    spec:
+      imagePullSecrets:
+        - name: go-http-server-secret
+      restartPolicy: Always
+      containers:
+        - name: go-http-server
+          image: ly4cn/go-native-cloud:week3
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: httpport
+              valueFrom:
+                configMapKeyRef:
+                  key: httpport
+                  name: go-http-server-conf
+            - name: loglevel
+              valueFrom:
+                configMapKeyRef:
+                  key: loglevel
+                  name: go-http-server-conf
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "0.5"
+              memory: 100Mi
+            limits:
+              cpu: "1"
+              memory: 1G
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+            timeoutSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+            timeoutSeconds: 3
+
+---
+# HPA
+# HPA 因云服务而异，比如 azure 有些区域就不支持 v2，只支持 v1
+# 如果是自己部署，要注意需要指标监测的支持。
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: go-http-server-hpa
+  namespace: cncamp-8
+spec:
+  maxReplicas: 4
+  minReplicas: 2
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: go-http-server
+  #v1的配置
+  #targetCPUUtilizationPercentage: 70
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          averageUtilization: 70
+          type: Utilization
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          averageValue: 500Mi
+          type: AverageValue
+
+---
+# Service
+# 因为在云服务上试，所以除了 NodePort 外，还可以用 LoadBalancer，方便测试
+# 如果没有 Service，本地还可以先用 PortForward 来测试
+apiVersion: v1
+kind: Service
+metadata:
+  name: go-http-server-service
+  namespace: cncamp-8
+spec:
+  type: LoadBalancer
+  ports:
+    - targetPort: 80
+      name: httpport
+      port: 80
+      protocol: TCP
+  selector:
+    app: go-http-server
