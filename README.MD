@@ -19,6 +19,40 @@ __作业要求：__
 
 ---
 
-提交地址： https://jinshuju.net/f/Xu0krh
+__作业内容__
 
-截止日期：2022 年 7 月 17 日 23:59
+* Kubernetes API 文件
+
+为了方便，把各种API都放到一个 `app.yml` 文件中。后续采用 `helm` 的时候，进行分离会更方便，更工程化。
+
+* 通过 `kubectl` 命令进行部署
+
+```
+kubectl apply -f app.yml
+```
+使用 `apply` 可以实现重新部署和滚动更新。
+
+执行结果：
+```
+namespace/cncamp-8 created
+secret/go-http-server-secret created
+configmap/go-http-server-conf created
+deployment.apps/go-http-server created
+```
+
+查看并等待部署完成(可以在命令前面加 `watch` )：
+```
+kubectl get all -n cncamp-8
+```
+执行结果：
+```
+NAME                                 READY   STATUS    RESTARTS   AGE
+pod/go-http-server-ccf7599f7-bzvqm   1/1     Running   0          40s
+pod/go-http-server-ccf7599f7-tk82k   1/1     Running   0          40s
+
+NAME                             READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/go-http-server   2/2     2            2           40s
+
+NAME                                       DESIRED   CURRENT   READY   AGE
+replicaset.apps/go-http-server-ccf7599f7   2         2         2       40s
+```
