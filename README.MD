@@ -30,7 +30,7 @@ __作业内容__
 ```
 kubectl apply -f app.yml
 ```
-使用 `apply` 可以实现重新部署和滚动更新。
+使用 `apply` ，结合 RollingUpdate 策略，可以实现滚动更新部署。
 
 执行结果：
 ```
