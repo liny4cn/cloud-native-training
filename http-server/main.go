@@ -37,9 +37,9 @@ func startHttpServer(bindPort string, quit chan error) *http.Server {
 
 func main() {
 	var (
-		bindPort string
+		bindPort   string
 		serverAddr string
-		envLevel string
+		envLevel   string
 	)
 
 	flag.StringVar(&serverAddr, "addr", "0.0.0.0", "Server address")
@@ -56,7 +56,7 @@ func main() {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
-	httpSrv := startHttpServer(serverAddr + ":" + bindPort, quit)
+	httpSrv := startHttpServer(serverAddr+":"+bindPort, quit)
 
 	for {
 		select {
@@ -69,7 +69,7 @@ func main() {
 			fmt.Println("Server closed.")
 			return
 		case s := <-sigs:
-			fmt.Printf("Recived notify signal %s (%d), Server is going to shudown.\n", s.String(), s)
+			fmt.Printf("Recived notify signal %s(%d), Server is going to shudown.\n", s.String(), s)
 			log.Warn().Str("signal", s.String()).Msg("Server is going to shutdown.")
 			httpSrv.Shutdown(context.Background())
 		}

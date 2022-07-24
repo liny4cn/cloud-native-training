@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"time"
 
@@ -9,7 +10,7 @@ import (
 )
 
 func initLogger(envLevel string) {
-	println("Init logger with ", envLevel)
+	fmt.Printf("Init logger with %s.\n", envLevel)
 
 	logLevel := zerolog.InfoLevel
 	isMatched := true
@@ -35,10 +36,10 @@ func initLogger(envLevel string) {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
 
 	if !isMatched {
-		println("Invalid log level:", envLevel, ", Current log level is INFO.")
-		log.Warn().Str("log-level", envLevel).Msgf("Current log level is INFO.")
+		fmt.Printf("Invalid log level: %s, Current log level is INFO.", envLevel)
+		log.Warn().Str("log-level", envLevel).Msg("Current log level is INFO.")
 		return
 	}
 
-	println("Current log level is", envLevel, "(", logLevel, ") .")
+	fmt.Printf("Current log level is %s(%d).\n", envLevel, logLevel)
 }
