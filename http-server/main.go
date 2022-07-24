@@ -38,22 +38,25 @@ func startHttpServer(bindPort string, quit chan error) *http.Server {
 func main() {
 	var (
 		bindPort string
+		serverAddr string
 		envLevel string
 	)
 
-	flag.StringVar(&bindPort, "bind-port", "0.0.0.0:80", "Server port")
-	flag.StringVar(&envLevel, "log-level", "INFO", "Server port")
+	flag.StringVar(&serverAddr, "addr", "0.0.0.0", "Server address")
+	flag.StringVar(&bindPort, "port", "80", "Server port")
+	flag.StringVar(&envLevel, "log-level", "INFO", "logger level")
 	envflag.Parse()
 
 	initLogger(envLevel)
 
-	fmt.Printf("Server is running at %s.\n", bindPort)
+	fmt.Println("Server version v1.0.0.")
+	fmt.Printf("Server is running at %s:%s.\n", serverAddr, bindPort)
 
 	quit := make(chan error, 1)
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
-	httpSrv := startHttpServer(bindPort, quit)
+	httpSrv := startHttpServer(serverAddr + ":" + bindPort, quit)
 
 	for {
 		select {

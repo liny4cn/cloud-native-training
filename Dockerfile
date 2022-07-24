@@ -1,16 +1,16 @@
 # Builder
 FROM golang AS builder
 
-ENV GOOS=linux \
-	GOARCH=amd64
+ENV GOOS=linux
+ENV GOARCH=amd64
 
 WORKDIR /src
-COPY ./http-server ./
-RUN go get
-RUN go build -o http-server
+COPY ./http-server/ ./
+RUN go get && go build -o http-server
 
 # Target
-FROM ubuntu
+FROM ubuntu 
+# FROM scratch
 
 ENV VERSION=1.0
 ENV BIND_PORT=80
