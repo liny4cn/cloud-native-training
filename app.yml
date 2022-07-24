@@ -8,7 +8,7 @@ metadata:
 # Secret
 # 由于我是直接使用 public 镜像库，实际不需要 dockerconfig。
 # 但一般的项目还是会放到私有镜像库中，因此还是配置了一个 dockerconfig。
-# 同时，dockerconfig 理论上需要配置成共用的，不应该在部署文件中带进来，以方便定期更新，并进行权限控制。 
+# 同时，dockerconfig 理论上需要配置成共用的，不应该在部署文件中带进来，以方便定期更新，并进行权限控制。
 apiVersion: v1
 kind: Secret
 metadata:
@@ -136,20 +136,49 @@ spec:
 # Service
 # 因为在云服务上试，所以除了 NodePort 外，还可以用 LoadBalancer，方便测试
 # 如果没有 Service，本地还可以先用 PortForward 来测试
+#
+# apiVersion: v1
+# kind: Service
+# metadata:
+#  name: lb-azure-service
+#  namespace: cncamp-8
+# spec:
+#   type: LoadBalancer
+#   ports:
+#     - targetPort: 80
+#       name: httpport
+#       port: 80
+#       protocol: TCP
+#   selector:
+#     app: go-http-server
+---
+# Service
 apiVersion: v1
 kind: Service
 metadata:
-  name: go-http-server-service
+  name: http-services
   namespace: cncamp-8
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   ports:
-    - targetPort: 80
-      name: httpport
-      port: 80
+    - port: 80
       protocol: TCP
+      name: http
   selector:
     app: go-http-server
+---
+# HTTPS 证书
+apiVersion: v1
+kind: Secret
+metadata:
+  name: test-gocloudnative-tls
+  namespace: cncamp-8
+data:
+  tls.crt: >-
+    LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURiekNDQWxlZ0F3SUJBZ0lVSzRVc3BDZlV0RDBGaDJjTDJuUS9TZnFDdm5Vd0RRWUpLb1pJaHZjTkFRRUwKQlFBd05URWJNQmtHQTFVRUF3d1NaMjlqYkc5MVpHNWhkR2wyWlM1M2IzSnJNUll3RkFZRFZRUUtEQTFuYjJOcwpiM1ZrYm1GMGFYWmxNQjRYRFRJeU1EY3lOREE0TlRjeE4xb1hEVEl6TURjeU5EQTROVGN4TjFvd05URWJNQmtHCkExVUVBd3dTWjI5amJHOTFaRzVoZEdsMlpTNTNiM0pyTVJZd0ZBWURWUVFLREExbmIyTnNiM1ZrYm1GMGFYWmwKTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUF3ZVVhd2h3Y0s3cFpvall4NWZLVQpaOXNoY1Ztc0YvWEtPalVRYm40N3hTY0J6cFlFbDVlS3k0Y1p1V0UrdjRESEE2SXVBeCtIVFBNdW9IRnNsdDB1CkgyclBZSEZ5UGRJbkw2Yk5mbS92RlJnY3BBc3FOTDliSkk1QTk5V3lMamlOSGFTMElzTkNrT25qQ1JscVg2akIKdzZqaUh1Y3kxSkFnalg1ajk1dU4yZ09ITlFtR202S2UvVS93clNlWHBpN25CWlFNUjFXRkdMTHZ3R2pQMFRDMgplM0hJVG4vUzA4NUJKTjR4Z25vaFFqWnMwcS9HR053aVFMMzY4cE45YjRmSUJWVWVrOTBXNjMxQTM2NTdHR3ByCkNZbTA1d1ByZ1RJM0Ewa0xzamlCdGdKTlZkamd6Z3hZMVZzTER6bG9MbXUvVEdXZVQvYVZtUTV5alR4UmI3ejMKYndJREFRQUJvM2N3ZFRBZEJnTlZIUTRFRmdRVVRyZkk0N0xWTi9Mams2UFE4VVZxZHRldDlqd3dId1lEVlIwagpCQmd3Rm9BVVRyZkk0N0xWTi9Mams2UFE4VVZxZHRldDlqd3dEd1lEVlIwVEFRSC9CQVV3QXdFQi96QWlCZ05WCkhSRUVHekFaZ2hkMFpYTjBMbWR2WTJ4dmRXUnVZWFJwZG1VdWQyOXlhekFOQmdrcWhraUc5dzBCQVFzRkFBT0MKQVFFQXRnaWY5Qys5TTBpRktKVGdkTW9qeXZjTkdSbS95djJtd3BmR1dlb1FBOStoejVieDRkVzFJZ3pBUmpxYwpva1k2eU13SUFvb1ArQUEyeHZaa210R3dkWkpLSWd3SGliSk4zMUlJbmdmdWdTWEx0bm1mbFRiRVpoeGlpek1LCk8vT3BKbElYSVVReUp4M1ZzdW5tb0ZqREd6NXZLcmd4eWdRdkpHWmcrMjBrYXpIMFluZU1KY0NMKzA3T3Z0d1gKTXFkT0tVaVExU1lQcjU4M3R1QXZvRHlJUXR5WDcxMUdsdnFwc1J1NDZ6cHUwZUtWRUkvUWdYZ01QdG1lM1Z2KwpEUlZqd1NNeHhCbno2NlVHc2dlZ1M3ZlZ2blM3L01IK3JRVVNWclNlbVdJQXNHNjZNdmp6Y2U3ZE01bVNpdUUyCkp0cUE5eSs4eXl1aklJalNBZjMrSEowVmRnPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+  tls.key: >-
+    LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUV2UUlCQURBTkJna3Foa2lHOXcwQkFRRUZBQVNDQktjd2dnU2pBZ0VBQW9JQkFRREI1UnJDSEJ3cnVsbWkKTmpIbDhwUm4yeUZ4V2F3WDljbzZOUkJ1Zmp2Rkp3SE9sZ1NYbDRyTGh4bTVZVDYvZ01jRG9pNERINGRNOHk2ZwpjV3lXM1M0ZmFzOWdjWEk5MGljdnBzMStiKzhWR0J5a0N5bzB2MXNramtEMzFiSXVPSTBkcExRaXcwS1E2ZU1KCkdXcGZxTUhEcU9JZTV6TFVrQ0NOZm1QM200M2FBNGMxQ1lhYm9wNzlUL0N0SjVlbUx1Y0ZsQXhIVllVWXN1L0EKYU0vUk1MWjdjY2hPZjlMVHprRWszakdDZWlGQ05telNyOFlZM0NKQXZmcnlrMzF2aDhnRlZSNlQzUmJyZlVEZgpybnNZYW1zSmliVG5BK3VCTWpjRFNRdXlPSUcyQWsxVjJPRE9ERmpWV3dzUE9XZ3VhNzlNWlo1UDlwV1pEbktOClBGRnZ2UGR2QWdNQkFBRUNnZ0VCQUxWMmpLZDBGVzFiVnozNENKVVRoWTc1UjRCRkUwbk5UL2xQNWxQeXNrK2UKWlJPSjFUeG1xSkE0blh1Z3BsQWwzcHZvOGJVY2tjMFRudVNyb3B4QzNrS3EvUEJlM0RNOWRrMGppQmkzKzRLNwpjVHFaOUdNdlg4YURtQXdhcEVxYnhINGt3aTN5bmw3dmRmcnpIVm52bjRCVmsyS21zQ3k5d3FtSnkxZFY3dGxFClpmV2k1YlFsWjhUMjJNVml5cVU5NFVOZXNWeUpXakVRZnZ1S280VnVZMm1XNkhyVk1rRnZsTlB4MWxPWlNxdWIKU0FpSFdLcUJBL2VwZDJZRXB1TXRXaHhuZVMrQUpkd1VJbTJwWWFGV2tMREZqLzZQWERPNWIwa3phSEZzK3NYQgp4a3FaSURaMWNSbzVaYm5zQ1ZiNFVqMXY3TnNXKzVma1JSdzFJdC9ycVlrQ2dZRUErM1dyc2g4RkdIaFVqeEVVCk5Cbk1iSjhSNmwxUDIxdXZiaE5xTGN2QnFSMGd6Vk85RldLemVCbHBUODhndkswMzQxcDlUdnkwUWQwSXEzN1IKZlZDaW5yendvQUc0QjQxaEx0TUJ2KzBtMlBXdy9zeWFvRnArTU1Kb25SeFBBRm5qK2FVbEhNNGkyb0lNRGlzcgpzK1RUMDgwcVc1MjdTTDAvZ1k3YlZyc2FQNHNDZ1lFQXhXVlp6UWNzS1VlSFRncTd2Qmw5aEtBTWE0QmZOb29yCmRrNWhZRnJEYWVqMTFCZmtHTDIxQVpGOXZ1T25kNFRhdWkvWXpwd3lYaE9TMnZyemZtaDJLR2xXalN6VUhLS2IKSEVubnVPN1ovNWVxcFdZc01iMmhHOVZmbDZveDdhSXJVdXpGRVJxZkpidlcyb1Nzd3pJK0VNTCtFQ1NoeWdrYgpjRk54cW5PWTVDMENnWUJBdHAzREwxeCtXYWxaVUVua3hxYm5aV0NVOGdLMUx6bE1tTTZBanFsK1BqTE01TG9LCm9PWVRDR2NqMU9oVjVqWTEybm5aTkF1bno1eUZsaE9Qcm9yTFUxQ1J2UitCUWc4Nm42OFpsNHloMVVrQnFlSTUKVmxDWGQ5QzRiaXFlcW9PVEliOFZWSzkva0d4TjBTcGtGNFcwUWw2ZVNVK0Rmc0N6TlBLWnRYa2gxUUtCZ0JldwpieE44N2Q3U1Y3bVU3aXpIdmxtQlA1eFRIcG9VQU4xRTBNalllNlVsTVFOUURxNnRiYUNQamxDdlQzUzNlK3htCk81V29CeDlsSi9XaHNrRVVWa0hKU25yTXkzUFlTOWNjUTNQZExrcFBNRXFETllDT3Fsd0Z3bUFZSzcvQis0TUwKS1NkQlU2SWFwZEU1cE9ZVURJREVkZXNJQ21hTnF6NVN0VXhvYlF2TkFvR0FXekFuQzlZbkRBWkU2ZWUwNXI4MgpPbGpncVluVjByM000Wk9HcGtldGJ6U3JQK3FUZXF2bHpZV2FkQ2EzOUwvQTZFL1VyYmw3MzVZb3RWaklNKzIxCndPNkd0Mzk3RmovZ0gyYVpSY0dyMXAzU01vTnkvTlVEeTBzOHp4Zld0NnJPYWxReVpIYXBxNnVDYytsWHYxN1AKSXdsYmJsZFg1NVpVaHA5bzNUL1drV2c9Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K
+type: kubernetes.io/tls
 
 ---
 # Ingress
@@ -157,13 +186,14 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: gateway
+  namespace: cncamp-8
   annotations:
     kubernetes.io/ingress.class: "nginx"
 spec:
   tls:
     - hosts:
         - test.gocloudnative.work
-      secretName: test-tls
+      secretName: test-gocloudnative-tls
   rules:
     - host: test.gocloudnative.work
       http:
@@ -172,6 +202,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: http-server
+                name: http-services
                 port:
                   number: 80
