@@ -150,3 +150,28 @@ spec:
       protocol: TCP
   selector:
     app: go-http-server
+
+---
+# Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gateway
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  tls:
+    - hosts:
+        - test.gocloudnative.work
+      secretName: test-tls
+  rules:
+    - host: test.gocloudnative.work
+      http:
+        paths:
+          - path: "/"
+            pathType: Prefix
+            backend:
+              service:
+                name: http-server
+                port:
+                  number: 80

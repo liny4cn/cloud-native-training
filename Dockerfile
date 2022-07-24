@@ -1,3 +1,4 @@
+# Builder
 FROM golang AS builder
 
 ENV GOOS=linux \
@@ -5,10 +6,16 @@ ENV GOOS=linux \
 
 WORKDIR /src
 COPY ./http-server ./
-RUN go get && go build
+RUN go get && go build -o http-server
 
+# Target
 FROM scratch
+
+ENV VERSION=1.0
+ENV BIND_PORT=80
+ENV LOG_LEVEL=INFO
+EXPOSE 80
+
 WORKDIR /app
 COPY --from=builder /src/http-server .
-EXPOSE 80
 ENTRYPOINT ["/app/http-server"]
