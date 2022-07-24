@@ -1,16 +1,14 @@
 FROM golang AS builder
 
-ENV GO111MODULE=off \
-	CGO_ENABLED=0 \
-	GOOS=linux \
+ENV GOOS=linux \
 	GOARCH=amd64
 
 WORKDIR /src
-COPY . .
-RUN go build -o myserver .
+COPY ./http-server ./
+RUN go get && go build
 
 FROM scratch
 WORKDIR /app
-COPY --from=builder /src/myserver .
+COPY --from=builder /src/http-server .
 EXPOSE 80
-ENTRYPOINT ["/app/myserver"]
+ENTRYPOINT ["/app/http-server"]
