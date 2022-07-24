@@ -27,8 +27,8 @@ metadata:
   name: go-http-server-conf
   namespace: cncamp-8
 data:
-  httpport: "80"
-  loglevel: "info"
+  BIND_PORT: ":80"
+  LOG_LEVEL: "INFO"
 
 ---
 # Deployment
@@ -60,15 +60,15 @@ spec:
           image: ly4cn/go-native-cloud:week3
           imagePullPolicy: IfNotPresent
           env:
-            - name: httpport
+            - name: BIND_PORT
               valueFrom:
                 configMapKeyRef:
-                  key: httpport
+                  key: BIND_PORT
                   name: go-http-server-conf
-            - name: loglevel
+            - name: LOG_LEVEL
               valueFrom:
                 configMapKeyRef:
-                  key: loglevel
+                  key: LOG_LEVEL
                   name: go-http-server-conf
           ports:
             - containerPort: 80
