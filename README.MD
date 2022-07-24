@@ -19,7 +19,23 @@ __作业要求：__
 
 ---
 
-__作业内容__
+## 2. 第二部分
+
+除了将 httpServer 应用优雅的运行在 Kubernetes 之上，我们还应该考虑如何将服务发布给对内和对外的调用方。
+来尝试用 Service, Ingress 将你的服务发布给集群外部的调用方吧。
+在第一部分的基础上提供更加完备的部署 spec，包括（不限于）：
+
+* Service
+* Ingress
+
+可以考虑的细节：
+
+*如何确保整个应用的高可用。
+*如何通过证书保证 httpServer 的通讯安全。
+
+---
+
+__作业内容 (1)__
 
 * Kubernetes API 文件
 
@@ -55,4 +71,49 @@ deployment.apps/go-http-server   2/2     2            2           40s
 
 NAME                                       DESIRED   CURRENT   READY   AGE
 replicaset.apps/go-http-server-ccf7599f7   2         2         2       40s
+```
+
+---
+
+__作业内容 (2)__
+
+* 源代码
+
+从 `week 3` 作业修改并合并源代码到 `http-server` 目录，主要变更：
+
+```
+1. 拆分文件，进行代码按功能重构
+2. 增加 zerolog，实现 日志部分的代码与配置分离
+3. 增加 envflag，实现 配置变量允许从环境变量和命令行参数获取，并提供默认值。
+4. 增加优雅退出代码
+```
+
+* Kubernetes API 文件
+
+继续增加 `app.yml`，增加 `service`, `ingress`, `secret` 配置。
+
+注： 其中 `secret` 配置为 https 私发证书。正常证书应购买，或是从 `Let's Encrypt` 获取，可以增加相关的插件进行自动获取。
+
+* 更新部署
+
+```
+kubectl apply -f app.yml
+```
+
+执行结果：
+
+```
+namespace/cncamp-8 unchanged
+secret/go-http-server-secret unchanged
+configmap/go-http-server-conf unchanged
+deployment.apps/go-http-server configured
+horizontalpodautoscaler.autoscaling/go-http-server-hpa configured
+service/lb-azure-service created
+service/http-services created
+ingress/gateway created
+```
+
+查看并等待部署完成(可以在命令前面加 `watch` )：
+```
+kubectl get all -n cncamp-8
 ```
