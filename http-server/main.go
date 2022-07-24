@@ -41,7 +41,7 @@ func main() {
 		envLevel string
 	)
 
-	flag.StringVar(&bindPort, "bind-port", ":80", "Server port")
+	flag.StringVar(&bindPort, "bind-port", "0.0.0.0:80", "Server port")
 	flag.StringVar(&envLevel, "log-level", "INFO", "Server port")
 	envflag.Parse()
 
