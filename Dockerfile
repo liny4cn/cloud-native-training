@@ -6,10 +6,11 @@ ENV GOOS=linux \
 
 WORKDIR /src
 COPY ./http-server ./
-RUN go get && go build -o http-server
+RUN go get
+RUN go build -o http-server
 
 # Target
-FROM scratch
+FROM ubuntu
 
 ENV VERSION=1.0
 ENV BIND_PORT=80
