@@ -1,6 +1,6 @@
 # week8
 
-## 第一部分
+## 1. 第一部分
 
 现在你对 Kubernetes 的控制面板的工作机制是否有了深入的了解呢？
 
@@ -35,7 +35,9 @@ __作业要求：__
 
 ---
 
-__作业内容 (1)__
+## 作业内容
+
+__1. 第一部分__
 
 * Kubernetes API 文件
 
@@ -75,7 +77,7 @@ replicaset.apps/go-http-server-ccf7599f7   2         2         2       40s
 
 ---
 
-__作业内容 (2)__
+__2. 第二部分__
 
 * 源代码
 
@@ -86,7 +88,7 @@ __作业内容 (2)__
 2. 增加 zerolog，实现 日志部分的代码与配置分离
 3. 增加 envflag，实现 配置变量允许从环境变量和命令行参数获取，并提供默认值。
 4. 增加优雅退出代码
-5. 增加 `.dockerignore` 文件，减少 docker 构建时复制的文件
+5. 增加 .dockerignore 文件，减少 docker 构建时复制的文件
 ```
 
 * Kubernetes API 文件
@@ -118,3 +120,14 @@ ingress/gateway created
 ```
 kubectl get all -n cncamp-8
 ```
+
+试验：
+```
+curl https://test.gocloudnative.work -vvv
+```
+
+注：本机修改 hosts 文件，增加以下内容：
+
+```
+x.x.x.x test.gocloudnative.work
+``` 
