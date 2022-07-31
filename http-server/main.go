@@ -11,14 +11,17 @@ import (
 	"syscall"
 
 	"github.com/gobike/envflag"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
 )
 
 func startHttpServer(bindPort string, quit chan error) *http.Server {
+	Register()
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", logRequest)
+	mux.HandleFunc("/", metricsRequest)
 	mux.HandleFunc("/healthz", healthz)
+	mux.Handle("/metrics", promhttp.Handler())
 	mux.HandleFunc("/debug/pprof/", pprof.Index)
 	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
 	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)

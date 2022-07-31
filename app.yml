@@ -49,6 +49,9 @@ spec:
     type: RollingUpdate
   template:
     metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "80"
       labels:
         app: go-http-server
     spec:
@@ -57,7 +60,7 @@ spec:
       restartPolicy: Always
       containers:
         - name: go-http-server
-          image: ly4cn/go-native-cloud:week3
+          image: ly4cn/go-native-cloud:week10
           imagePullPolicy: IfNotPresent
           env:
             - name: PORT

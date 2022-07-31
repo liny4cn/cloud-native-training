@@ -1,132 +1,108 @@
-# week 8 作业
+# week 10 作业
 
 ## 作业要求
 ---
 
-__1. 第一部分__
-
-现在你对 Kubernetes 的控制面板的工作机制是否有了深入的了解呢？
-
-是否对如何构建一个优雅的云上应用有了深刻的认识，那么接下来用最近学过的知识把你之前编写的 http 以优雅的方式部署起来吧，你可能需要审视之前代码是否能满足优雅上云的需求。
-
-编写 Kubernetes 部署脚本将 httpserver 部署到 Kubernetes 集群，以下是你可以思考的维度。
-
-* 优雅启动
-* 优雅终止
-* 资源需求和 QoS 保证
-* 探活
-* 日常运维需求，日志等级
-* 配置和代码分离
-
-__2. 第二部分__
-
-除了将 httpServer 应用优雅的运行在 Kubernetes 之上，我们还应该考虑如何将服务发布给对内和对外的调用方。
-来尝试用 Service, Ingress 将你的服务发布给集群外部的调用方吧。
-在第一部分的基础上提供更加完备的部署 spec，包括（不限于）：
-
-* Service
-* Ingress
-
-可以考虑的细节：
-
-*如何确保整个应用的高可用。
-*如何通过证书保证 httpServer 的通讯安全。
+1. 为 HTTPServer 添加 0-2 秒的随机延时；
+1. 为 HTTPServer 项目添加延时 Metric；
+1. 将 HTTPServer 部署至测试集群，并完成 Prometheus 配置；
+1. 从 Promethus 界面中查询延时指标数据；
+1. （可选）创建一个 Grafana Dashboard 展现延时分配情况。
 
 ---
 ## 作业内容
 ---
 
-__1. 第一部分__
+* 为 HTTPServer 添加 0-2 秒的随机延时
 
-* Kubernetes API 文件
+简单地采用 time.Sleep 进行延时
 
-为了方便，把各种API都放到一个 `app.yml` 文件中。后续采用 `helm` 的时候，进行分离会更方便，更工程化。
+```
+delay := rand.Intn(2000)
+time.Sleep(time.Duration(delay+10) * time.Millisecond)
+```
 
-* 通过 `kubectl` 命令进行部署
+* 为 HTTPServer 项目添加延时 Metric
+
+(1) 注册 metric
+
+在 main.go 的合适位置，创建并注册 latencyFn，并在后面调用 Observe 进行指标收集
+
+```
+latencyFn := prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: namespace,
+			Name:      "execution_latency_seconds",
+			Help:      help,
+			Buckets:   prometheus.ExponentialBuckets(0.001, 2, 15),
+		}, []string{"step"},
+	)
+
+prometheus.Register(latencyFn)
+
+```
+
+(2) 收集 metric
+
+在 request handler 中，计算并收集指标
+
+```
+start := time.Now();
+// ...
+// 进行延时（用 time.Sleep）
+// 执行请求
+// ...
+last := time.Now();
+latencyFn.WithLabelValues("total").Observe(last.Sub(start).Seconds())
+```
+
+* 将 HTTPServer 部署至测试集群，并完成 Prometheus 配置
+
+(1) 修改并增加 annotations 配置到 pod
+
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-http-server
+  namespace: cncamp-8
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: go-http-server
+#...
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "80"
+      labels:
+        app: go-http-server
+    spec:
+      imagePullSecrets:
+        - name: go-http-server-secret
+      restartPolicy: Always
+      containers:
+        - name: go-http-server
+          image: ly4cn/go-native-cloud:week10
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+#...
+```
+
+(2) 部署至测试集群
 
 ```
 kubectl apply -f app.yml
 ```
-使用 `apply` ，结合 RollingUpdate 策略，可以实现滚动更新部署。
 
-执行结果：
-```
-namespace/cncamp-8 created
-secret/go-http-server-secret created
-configmap/go-http-server-conf created
-deployment.apps/go-http-server created
-```
 
-查看并等待部署完成(可以在命令前面加 `watch` )：
-```
-kubectl get all -n cncamp-8
-```
-执行结果：
-```
-NAME                                 READY   STATUS    RESTARTS   AGE
-pod/go-http-server-ccf7599f7-bzvqm   1/1     Running   0          40s
-pod/go-http-server-ccf7599f7-tk82k   1/1     Running   0          40s
+* 从 Prometheus 界面中查询延时指标数据；
 
-NAME                             READY   UP-TO-DATE   AVAILABLE   AGE
-deployment.apps/go-http-server   2/2     2            2           40s
-
-NAME                                       DESIRED   CURRENT   READY   AGE
-replicaset.apps/go-http-server-ccf7599f7   2         2         2       40s
-```
-
----
-
-__2. 第二部分__
-
-* 源代码
-
-从 `week 3` 作业修改并合并源代码到 `http-server` 目录，主要变更：
+Query查询 prometheus
 
 ```
-1. 拆分文件，进行代码按功能重构
-2. 增加 zerolog，实现 日志部分的代码与配置分离
-3. 增加 envflag，实现 配置变量允许从环境变量和命令行参数获取，并提供默认值。
-4. 增加优雅退出代码
-5. 增加 .dockerignore 文件，减少 docker 构建时复制的文件
+histogram_quantile(0.95, sum(rate(httpserver_execution_latency_sends_bucket[5m])) by (le))
 ```
-
-* Kubernetes API 文件
-
-继续增加 `app.yml`，增加 `service`, `ingress`, `secret` 配置。
-
-注： 其中 `secret` 配置为 https 私发证书。正常证书应购买，或是从 `Let's Encrypt` 获取，可以增加相关的插件进行自动获取。
-
-* 更新部署
-
-```
-kubectl apply -f app.yml
-```
-
-执行结果：
-
-```
-namespace/cncamp-8 unchanged
-secret/go-http-server-secret unchanged
-configmap/go-http-server-conf unchanged
-deployment.apps/go-http-server configured
-horizontalpodautoscaler.autoscaling/go-http-server-hpa configured
-service/lb-azure-service created
-service/http-services created
-ingress/gateway created
-```
-
-查看并等待部署完成(可以在命令前面加 `watch` )：
-```
-kubectl get all -n cncamp-8
-```
-
-试验：
-```
-curl https://test.gocloudnative.work -vvv
-```
-
-注：本机修改 hosts 文件，增加以下内容：
-
-```
-x.x.x.x test.gocloudnative.work
-``` 
