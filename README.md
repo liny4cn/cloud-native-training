@@ -243,8 +243,11 @@ spec:
 
 ```
 $ kubectl apply -f issuer.yaml
-
 issuer.cert-manager.io/letsencrypt-ca created
+
+$ kubectl get issuer -n istio-system
+NAME             READY   AGE
+letsencrypt-ca   True    30m
 ```
 
 * 颁发域名证书
@@ -272,8 +275,17 @@ spec:
 
 ```shell
 $ kubectl create -f cert.yaml
-
 certificate.cert-manager.io/httpserver created
+
+$ kubectl get cert -n istio-system
+NAME         READY   SECRET       AGE
+httpserver   True    httpserver   30m
+
+$ kubectl get secret -n istio-system
+NAME                                               TYPE                                  DATA   AGE
+httpserver                                         kubernetes.io/tls                     2      29m
+letsencrypt-ca                                     Opaque                                1      30m
+...
 ```
 
 ## (4) 验证结果
