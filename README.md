@@ -12,7 +12,7 @@
 
 * 部署 Istio
 
-使用 istioctl install 进行部署， 并检查:
+使用 `istioctl install` 进行部署， 并检查:
 
 ```shell
 $ kubectl get all -n istio-system
@@ -41,9 +41,9 @@ replicaset.apps/istiod-6d67d84bc7                 0         0         0       5h
 replicaset.apps/istiod-8495d444bb                 1         1         1       4h35m
 ```
 
-* 解析 cnc12.gocloudnative.work 域名解析
+* 解析 `cnc12.gocloudnative.work` 域名
 
-将域名解析到上面的 istio-ingressgateway 的IP地址： 20.239.12.195 
+将域名解析到上面的 `istio-ingressgateway` 的 LoadBalancer 地址： `20.239.12.195`
 
 
 ## (1) 部署 http-server
@@ -100,15 +100,15 @@ spec:
 执行部署命令：
 
 ```shell
-~$ kubectl create namespace week12
-~$ kubectl label ns week12 istio-injection=enabled
-~$ kubectl apply -f deploy.yaml
+$ kubectl create namespace week12
+$ kubectl label ns week12 istio-injection=enabled
+$ kubectl apply -f deploy.yaml
 
 ```
 等待部署完成：
 
 ```shell
-~$ kubectl get all -n week12
+$ kubectl get all -n week12
 NAME                                  READY   STATUS    RESTARTS   AGE
 pod/go-http-server-784cfd6cc7-fnvkc   2/2     Running   0          27s
 
@@ -209,7 +209,7 @@ kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/
 
 手工进行安装验证：
 ```
-~$ kubectl get pods --namespace cert-manager
+$ kubectl get pods --namespace cert-manager
 NAME                                      READY   STATUS    RESTARTS   AGE
 cert-manager-55649d64b4-7gqm2             1/1     Running   0          104m
 cert-manager-cainjector-666db4777-47jjp   1/1     Running   0          104m
@@ -242,7 +242,7 @@ spec:
 由于配置与我的服务器一致，因此不需要进行修改，可以直接使用：
 
 ```
-~$ kubectl apply -f issuer.yaml
+$ kubectl apply -f issuer.yaml
 
 issuer.cert-manager.io/letsencrypt-ca created
 ```
@@ -271,7 +271,7 @@ spec:
 ```
 
 ```shell
-~$ kubectl create -f cert.yaml
+$ kubectl create -f cert.yaml
 
 certificate.cert-manager.io/httpserver created
 ```
