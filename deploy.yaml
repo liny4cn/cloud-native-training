@@ -1,0 +1,38 @@
+# Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-http-server
+  namespace: week12
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: go-http-server
+  template:
+    metadata:
+      labels:
+        app: go-http-server
+    spec:
+      restartPolicy: Always
+      containers:
+        - name: go-http-server
+          image: ly4cn/go-native-cloud:week10
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+---
+# Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: http-server
+  namespace: week12
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      protocol: TCP
+      name: http
+  selector:
+    app: go-http-server

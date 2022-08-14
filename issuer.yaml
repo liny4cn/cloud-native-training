@@ -1,0 +1,16 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt-ca
+  namespace: istio-system
+spec:
+  acme:
+    email: ly4cn@126.com
+    preferredChain: ""
+    privateKeySecretRef:
+      name: letsencrypt-ca
+    server: https://acme-v02.api.letsencrypt.org/directory
+    solvers:
+      - http01:
+          ingress:
+            class: istio
