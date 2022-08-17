@@ -11,6 +11,9 @@ spec:
       app: go-http-server
   template:
     metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "80"
       labels:
         app: go-http-server
     spec:
